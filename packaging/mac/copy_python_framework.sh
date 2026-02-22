@@ -18,6 +18,7 @@ rm -rf $NEW_FRAMEWORK_PATH/Versions/3.9
 rm -rf $NEW_FRAMEWORK_PATH/Versions/3.10
 rm -rf $NEW_FRAMEWORK_PATH/Versions/3.11
 rm -rf $NEW_FRAMEWORK_PATH/Versions/3.13
+rm -rf $NEW_FRAMEWORK_PATH/Versions/3.14
 
 
 BIN_EXE=$NEW_FRAMEWORK_PATH/Versions/$VERSION/bin/python$VERSION
@@ -65,29 +66,45 @@ install_name_tool -change \
 	@rpath/Python.framework/Versions/3.12/lib/libtk8.6.dylib \
     $LOCAL_FRAMEWORKS/Python.framework/Versions/3.12/lib/python3.12/lib-dynload/_tkinter.cpython-312-darwin.so
 
-# update libcrypto and libssl links
-install_name_tool -id \
-	@rpath/Python.framework/Versions/3.12/lib/libcrypto.1.1.dylib \
-    $LOCAL_FRAMEWORKS/Python.framework/Versions/3.12/lib/libcrypto.1.1.dylib
-
-install_name_tool -id \
-	@rpath/Python.framework/Versions/3.12/lib/libssl.1.1.dylib \
-    $LOCAL_FRAMEWORKS/Python.framework/Versions/3.12/lib/libssl.1.1.dylib
-
-install_name_tool -change \
-	/Library/Frameworks/Python.framework/Versions/3.12/lib/libcrypto.1.1.dylib \
-	@rpath/Python.framework/Versions/3.12/lib/libcrypto.1.1.dylib \
-	$LOCAL_FRAMEWORKS/Python.framework/Versions/3.12/lib/libssl.1.1.dylib
-
-install_name_tool -change \
-	/Library/Frameworks/Python.framework/Versions/3.12/lib/libcrypto.1.1.dylib \
-	@rpath/Python.framework/Versions/3.12/lib/libcrypto.1.1.dylib \
-	$LOCAL_FRAMEWORKS/Python.framework/Versions/3.12/lib/python3.12/lib-dynload/_ssl.cpython-312-darwin.so
-
-install_name_tool -change \
-	/Library/Frameworks/Python.framework/Versions/3.12/lib/libssl.1.1.dylib \
-	@rpath/Python.framework/Versions/3.12/lib/libssl.1.1.dylib \
-	$LOCAL_FRAMEWORKS/Python.framework/Versions/3.12/lib/python3.12/lib-dynload/_ssl.cpython-312-darwin.so
+# update libcrypto and libssl links (support OpenSSL 1.1 and 3.x)
+SSL_LIB_DIR=$LOCAL_FRAMEWORKS/Python.framework/Versions/3.12/lib
+if [ -f "$SSL_LIB_DIR/libcrypto.3.dylib" ]; then
+	# OpenSSL 3.x (Python 3.12+ from python.org)
+	install_name_tool -id @rpath/Python.framework/Versions/3.12/lib/libcrypto.3.dylib \
+		$SSL_LIB_DIR/libcrypto.3.dylib
+	install_name_tool -id @rpath/Python.framework/Versions/3.12/lib/libssl.3.dylib \
+		$SSL_LIB_DIR/libssl.3.dylib
+	install_name_tool -change \
+		/Library/Frameworks/Python.framework/Versions/3.12/lib/libcrypto.3.dylib \
+		@rpath/Python.framework/Versions/3.12/lib/libcrypto.3.dylib \
+		$SSL_LIB_DIR/libssl.3.dylib
+	install_name_tool -change \
+		/Library/Frameworks/Python.framework/Versions/3.12/lib/libcrypto.3.dylib \
+		@rpath/Python.framework/Versions/3.12/lib/libcrypto.3.dylib \
+		$LOCAL_FRAMEWORKS/Python.framework/Versions/3.12/lib/python3.12/lib-dynload/_ssl.cpython-312-darwin.so
+	install_name_tool -change \
+		/Library/Frameworks/Python.framework/Versions/3.12/lib/libssl.3.dylib \
+		@rpath/Python.framework/Versions/3.12/lib/libssl.3.dylib \
+		$LOCAL_FRAMEWORKS/Python.framework/Versions/3.12/lib/python3.12/lib-dynload/_ssl.cpython-312-darwin.so
+elif [ -f "$SSL_LIB_DIR/libcrypto.1.1.dylib" ]; then
+	# OpenSSL 1.1.x (older Python builds)
+	install_name_tool -id @rpath/Python.framework/Versions/3.12/lib/libcrypto.1.1.dylib \
+		$SSL_LIB_DIR/libcrypto.1.1.dylib
+	install_name_tool -id @rpath/Python.framework/Versions/3.12/lib/libssl.1.1.dylib \
+		$SSL_LIB_DIR/libssl.1.1.dylib
+	install_name_tool -change \
+		/Library/Frameworks/Python.framework/Versions/3.12/lib/libcrypto.1.1.dylib \
+		@rpath/Python.framework/Versions/3.12/lib/libcrypto.1.1.dylib \
+		$SSL_LIB_DIR/libssl.1.1.dylib
+	install_name_tool -change \
+		/Library/Frameworks/Python.framework/Versions/3.12/lib/libcrypto.1.1.dylib \
+		@rpath/Python.framework/Versions/3.12/lib/libcrypto.1.1.dylib \
+		$LOCAL_FRAMEWORKS/Python.framework/Versions/3.12/lib/python3.12/lib-dynload/_ssl.cpython-312-darwin.so
+	install_name_tool -change \
+		/Library/Frameworks/Python.framework/Versions/3.12/lib/libssl.1.1.dylib \
+		@rpath/Python.framework/Versions/3.12/lib/libssl.1.1.dylib \
+		$LOCAL_FRAMEWORKS/Python.framework/Versions/3.12/lib/python3.12/lib-dynload/_ssl.cpython-312-darwin.so
+fi
 
 # update curses links
 install_name_tool -id \

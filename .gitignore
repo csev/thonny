@@ -1,4 +1,5 @@
 !thonny.exe
+*.swp
 */*.pyc
 *.log
 *.iobj

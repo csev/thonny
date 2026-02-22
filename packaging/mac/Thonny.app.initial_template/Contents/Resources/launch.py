@@ -3,6 +3,11 @@
 import sys
 import os.path
 
+# Ensure common locations for Node.js (needed for LSP/code completion) are in PATH
+_path_additions = "/opt/homebrew/bin:/usr/local/bin"
+_existing = os.environ.get("PATH", "")
+os.environ["PATH"] = _path_additions + (":" + _existing if _existing else "")
+
 execdir = os.path.join(os.path.dirname(os.path.dirname(sys.argv[0])), "MacOS")
 executable = os.path.join(execdir, "Python")
 resdir = os.path.join(os.path.dirname(execdir), "Resources")
